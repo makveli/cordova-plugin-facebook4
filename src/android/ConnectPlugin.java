@@ -67,7 +67,7 @@ public class ConnectPlugin extends CordovaPlugin {
 
     @Override
     protected void pluginInitialize() {
-        FacebookSdk.sdkInitialize(cordova.getActivity().getApplicationContext());
+       //FacebookSdk.sdkInitialize(cordova.getActivity().getApplicationContext());
 
         // create callbackManager
         callbackManager = CallbackManager.Factory.create();
