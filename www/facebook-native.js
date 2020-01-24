@@ -15,12 +15,3 @@ exports.login = function login (permissions, s, f) {
 exports.getAccessToken = function getAccessToken (s, f) {
   exec(s, f, 'FacebookConnectPlugin', 'getAccessToken', [])
 }
-
-exports.logout = function logout (s, f) {
-  exec(s, f, 'FacebookConnectPlugin', 'logout', [])
-}
-
-exports.api = function api (graphPath, permissions, s, f) {
-  permissions = permissions || []
-  exec(s, f, 'FacebookConnectPlugin', 'graphApi', [graphPath, permissions])
-}
