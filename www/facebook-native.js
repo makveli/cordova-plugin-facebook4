@@ -41,15 +41,3 @@ exports.api = function api (graphPath, permissions, s, f) {
   permissions = permissions || []
   exec(s, f, 'FacebookConnectPlugin', 'graphApi', [graphPath, permissions])
 }
-
-exports.getDeferredApplink = function (s, f) {
-  exec(s, f, 'FacebookConnectPlugin', 'getDeferredApplink', [])
-}
-
-exports.activateApp = function (s, f) {
-  exec(s, f, 'FacebookConnectPlugin', 'activateApp', [])
-}
-
-exports.getDeferredApplink = function (s, f) {
-	  exec(s, f, 'FacebookConnectPlugin', 'getDeferredApplink', [])
-}
