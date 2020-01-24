@@ -144,83 +144,6 @@ public class ConnectPlugin extends CordovaPlugin {
                 }
             }
         });
-
-        shareDialog = new ShareDialog(cordova.getActivity());
-        shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
-            @Override
-            public void onSuccess(Sharer.Result result) {
-                if (showDialogContext != null) {
-                    showDialogContext.success(result.getPostId());
-                    showDialogContext = null;
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                FacebookOperationCanceledException e = new FacebookOperationCanceledException();
-                handleError(e, showDialogContext);
-            }
-
-            @Override
-            public void onError(FacebookException e) {
-                Log.e("Activity", String.format("Error: %s", e.toString()));
-                handleError(e, showDialogContext);
-            }
-        });
-
-        messageDialog = new MessageDialog(cordova.getActivity());
-        messageDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
-            @Override
-            public void onSuccess(Sharer.Result result) {
-                if (showDialogContext != null) {
-                    showDialogContext.success();
-                    showDialogContext = null;
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                FacebookOperationCanceledException e = new FacebookOperationCanceledException();
-                handleError(e, showDialogContext);
-            }
-
-            @Override
-            public void onError(FacebookException e) {
-                Log.e("Activity", String.format("Error: %s", e.toString()));
-                handleError(e, showDialogContext);
-            }
-        });
-
-        gameRequestDialog = new GameRequestDialog(cordova.getActivity());
-        gameRequestDialog.registerCallback(callbackManager, new FacebookCallback<GameRequestDialog.Result>() {
-            @Override
-            public void onSuccess(GameRequestDialog.Result result) {
-                if (showDialogContext != null) {
-                    try {
-                        JSONObject json = new JSONObject();
-                        json.put("requestId", result.getRequestId());
-                        json.put("recipientsIds", new JSONArray(result.getRequestRecipients()));
-                        showDialogContext.success(json);
-                        showDialogContext = null;
-                    } catch (JSONException ex) {
-                        showDialogContext.success();
-                        showDialogContext = null;
-                    }
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                FacebookOperationCanceledException e = new FacebookOperationCanceledException();
-                handleError(e, showDialogContext);
-            }
-
-            @Override
-            public void onError(FacebookException e) {
-                Log.e("Activity", String.format("Error: %s", e.toString()));
-                handleError(e, showDialogContext);
-            }
-        });
     }
 
     @Override
@@ -249,67 +172,10 @@ public class ConnectPlugin extends CordovaPlugin {
             executeLogin(args, callbackContext);
             return true;
 
-        } else if (action.equals("logout")) {
-            if (hasAccessToken()) {
-                LoginManager.getInstance().logOut();
-                callbackContext.success();
-            } else {
-                callbackContext.error("No valid session found, must call init and login before logout.");
-            }
-            return true;
-
-        } else if (action.equals("getLoginStatus")) {
-            callbackContext.success(getResponse());
-            return true;
-
-        } else if (action.equals("getAccessToken")) {
-            if (hasAccessToken()) {
-                callbackContext.success(AccessToken.getCurrentAccessToken().getToken());
-            } else {
-                // Session not open
-                callbackContext.error("Session not open.");
-            }
-            return true;
-
-        } else if (action.equals("logEvent")) {
-            executeLogEvent(args, callbackContext);
-            return true;
-
-        } else if (action.equals("logPurchase")) {
-            /*
-             * While calls to logEvent can be made to register purchase events,
-             * there is a helper method that explicitly takes a currency indicator.
-             */
-            if (args.length() != 2) {
-                callbackContext.error("Invalid arguments");
-                return true;
-            }
-            BigDecimal value = new BigDecimal(args.getString(0));
-            String currency = args.getString(1);
-            logger.logPurchase(value, Currency.getInstance(currency));
-            callbackContext.success();
-            return true;
-
         } else if (action.equals("showDialog")) {
             executeDialog(args, callbackContext);
             return true;
 
-        } else if (action.equals("graphApi")) {
-            executeGraph(args, callbackContext);
-
-            return true;
-        } else if (action.equals("getDeferredApplink")) {
-            executeGetDeferredApplink(args, callbackContext);
-            return true;
-        } else if (action.equals("activateApp")) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    AppEventsLogger.activateApp(cordova.getActivity().getApplication());
-                }
-            });
-
-            return true;
         }
         return false;
     }
