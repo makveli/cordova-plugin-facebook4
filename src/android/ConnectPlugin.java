@@ -76,7 +76,7 @@ public class ConnectPlugin extends CordovaPlugin {
         logger = AppEventsLogger.newLogger(cordova.getActivity().getApplicationContext());
 
         // augment web view to enable hybrid app events
-        enableHybridAppEvents();
+      
 
         // Set up the activity result callback to this class
         cordova.setActivityResultCallback(this);
@@ -120,7 +120,6 @@ public class ConnectPlugin extends CordovaPlugin {
 
             @Override
             public void onError(FacebookException e) {
-                Log.e("Activity", String.format("Error: %s", e.toString()));
                 handleError(e, loginContext);
                 // Sign-out current instance in case token is still valid for previous user
                 if (e instanceof FacebookAuthorizationException) {
@@ -162,132 +161,7 @@ public class ConnectPlugin extends CordovaPlugin {
         return false;
     }
 
-
-    private void executeGraph(JSONArray args, CallbackContext callbackContext) throws JSONException {
-        lastGraphContext = callbackContext;
-        CallbackContext graphContext  = callbackContext;
-        PluginResult pr = new PluginResult(PluginResult.Status.NO_RESULT);
-        pr.setKeepCallback(true);
-        graphContext.sendPluginResult(pr);
-
-        graphPath = args.getString(0);
-        JSONArray arr = args.getJSONArray(1);
-
-        final Set<String> permissions = new HashSet<String>(arr.length());
-        for (int i = 0; i < arr.length(); i++) {
-            permissions.add(arr.getString(i));
-        }
-
-        if (permissions.size() == 0) {
-            makeGraphCall(graphContext);
-            return;
-        }
-
-        boolean publishPermissions = false;
-        boolean readPermissions = false;
-        String declinedPermission = null;
-
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        if (accessToken.getPermissions().containsAll(permissions)) {
-            makeGraphCall(graphContext);
-            return;
-        }
-
-        Set<String> declined = accessToken.getDeclinedPermissions();
-
-        // Figure out if we have all permissions
-        for (String permission : permissions) {
-            if (declined.contains(permission)) {
-                declinedPermission = permission;
-                break;
-            }
-
-            if (isPublishPermission(permission)) {
-                publishPermissions = true;
-            } else {
-                readPermissions = true;
-            }
-
-            // Break if we have a mixed bag, as this is an error
-            if (publishPermissions && readPermissions) {
-                break;
-            }
-        }
-
-        if (declinedPermission != null) {
-            graphContext.error("This request needs declined permission: " + declinedPermission);
-			return;
-        }
-
-        if (publishPermissions && readPermissions) {
-            graphContext.error("Cannot ask for both read and publish permissions.");
-            return;
-        }
-
-        cordova.setActivityResultCallback(this);
-        LoginManager loginManager = LoginManager.getInstance();
-        // Check for write permissions, the default is read (empty)
-        if (publishPermissions) {
-            // Request new publish permissions
-            loginManager.logInWithPublishPermissions(cordova.getActivity(), permissions);
-        } else {
-            // Request new read permissions
-            loginManager.logInWithReadPermissions(cordova.getActivity(), permissions);
-        }
-    }
-
-    private void executeLogEvent(JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (args.length() == 0) {
-            // Not enough parameters
-            callbackContext.error("Invalid arguments");
-            return;
-        }
-
-        String eventName = args.getString(0);
-        if (args.length() == 1) {
-            logger.logEvent(eventName);
-            callbackContext.success();
-            return;
-        }
-
-        // Arguments is greater than 1
-        JSONObject params = args.getJSONObject(1);
-        Bundle parameters = new Bundle();
-        Iterator<String> iter = params.keys();
-
-        while (iter.hasNext()) {
-            String key = iter.next();
-            try {
-                // Try get a String
-                String value = params.getString(key);
-                parameters.putString(key, value);
-            } catch (JSONException e) {
-                // Maybe it was an int
-                Log.w(TAG, "Type in AppEvent parameters was not String for key: " + key);
-                try {
-                    int value = params.getInt(key);
-                    parameters.putInt(key, value);
-                } catch (JSONException e2) {
-                    // Nope
-                    Log.e(TAG, "Unsupported type in AppEvent parameters for key: " + key);
-                }
-            }
-        }
-
-        if (args.length() == 2) {
-            logger.logEvent(eventName, parameters);
-            callbackContext.success();
-        }
-
-        if (args.length() == 3) {
-            double value = args.getDouble(2);
-            logger.logEvent(eventName, value, parameters);
-            callbackContext.success();
-        }
-    }
-
     private void executeLogin(JSONArray args, CallbackContext callbackContext) throws JSONException {
-        Log.d(TAG, "login FB");
 
         // #568: Reset lastGraphContext in case it would still contains the last graphApi results of a previous session (login -> graphApi -> logout -> login)
         lastGraphContext = null;
@@ -353,23 +227,6 @@ public class ConnectPlugin extends CordovaPlugin {
         } else {
             // Request new read permissions
             LoginManager.getInstance().logInWithReadPermissions(cordova.getActivity(), permissions);
-        }
-    }
-
-    private void enableHybridAppEvents() {
-        try {
-            Context appContext = cordova.getActivity().getApplicationContext();
-            Resources res = appContext.getResources();
-            int enableHybridAppEventsId = res.getIdentifier("fb_hybrid_app_events", "bool", appContext.getPackageName());
-            boolean enableHybridAppEvents = enableHybridAppEventsId != 0 && res.getBoolean(enableHybridAppEventsId);
-            if (enableHybridAppEvents) {
-                AppEventsLogger.augmentWebView((WebView) this.webView.getView(), appContext);
-                Log.d(TAG, "FB Hybrid app events are enabled");
-            } else {
-                Log.d(TAG, "FB Hybrid app events are not enabled");
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "FB Hybrid app events cannot be enabled");
         }
     }
 
