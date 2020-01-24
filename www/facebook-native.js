@@ -11,7 +11,3 @@ exports.showDialog = function showDialog (options, s, f) {
 exports.login = function login (permissions, s, f) {
   exec(s, f, 'FacebookConnectPlugin', 'login', permissions)
 }
-
-exports.getAccessToken = function getAccessToken (s, f) {
-  exec(s, f, 'FacebookConnectPlugin', 'getAccessToken', [])
-}
